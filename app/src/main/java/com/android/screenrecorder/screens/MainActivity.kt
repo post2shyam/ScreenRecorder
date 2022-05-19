@@ -1,8 +1,9 @@
-package com.android.screenrecorder
+package com.android.screenrecorder.screens
 
 import android.os.Bundle
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
+import com.android.screenrecorder.R
 import com.android.screenrecorder.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
