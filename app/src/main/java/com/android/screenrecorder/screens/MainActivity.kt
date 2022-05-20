@@ -5,8 +5,17 @@ import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import com.android.screenrecorder.R
 import com.android.screenrecorder.databinding.ActivityMainBinding
+import com.android.screenrecorder.system.logger.RollingFileTimberTree
+import dagger.hilt.android.AndroidEntryPoint
+import timber.log.Timber
+import javax.inject.Inject
 
+
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+
+    @Inject
+    lateinit var rollingFileTimberTree: RollingFileTimberTree
 
     private lateinit var binding: ActivityMainBinding
 
@@ -17,6 +26,10 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setupUi()
+        rollingFileTimberTree.start()
+        Timber.tag("SSG").d("onCreate:")
+        rollingFileTimberTree.stop()
+        Timber.tag("SSG2").d("onCreate:")
     }
 
     private fun setupUi() {
