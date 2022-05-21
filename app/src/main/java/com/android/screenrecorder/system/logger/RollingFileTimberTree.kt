@@ -7,6 +7,7 @@ import timber.log.Timber
 import java.io.Closeable
 import java.io.File
 import java.io.OutputStreamWriter
+import java.nio.charset.Charset
 
 class RollingFileTimberTree(val application: Application) : Timber.Tree(), Engine, Closeable {
     private var engineStarted: Boolean = false
@@ -14,7 +15,7 @@ class RollingFileTimberTree(val application: Application) : Timber.Tree(), Engin
     private var fileCount = 0
     private var file: File
     private var outputStreamWriter: OutputStreamWriter
-    private val maxFileSize = 1
+    private val maxFileSizeInMBytes = 3
 
     init {
         file = File(application.filesDir, fileName())
@@ -25,42 +26,37 @@ class RollingFileTimberTree(val application: Application) : Timber.Tree(), Engin
     override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
         //If logging engine is started
         if (engineStarted) {
+            checkAndSplitLogfile(message.toByteArray(Charset.defaultCharset()).size)
             when (priority) {
                 Log.VERBOSE -> {
                     Log.v(tag, message)
-                    checkAndSplitLogfile(message.length)
                     outputStreamWriter.write(message)
                     outputStreamWriter.flush()
 
                 }
                 Log.DEBUG -> {
                     Log.d(tag, message)
-                    checkAndSplitLogfile(message.length)
                     outputStreamWriter.write(message)
                     outputStreamWriter.flush()
                 }
                 Log.INFO -> {
                     Log.i(tag, message)
-                    checkAndSplitLogfile(message.length)
                     outputStreamWriter.write(message)
                     outputStreamWriter.flush()
                 }
                 Log.WARN -> {
                     Log.w(tag, message)
-                    checkAndSplitLogfile(message.length)
                     outputStreamWriter.write(message)
                     outputStreamWriter.flush()
                 }
                 Log.ERROR -> {
                     Log.e(tag, message)
-                    checkAndSplitLogfile(message.length)
                     outputStreamWriter.write(message)
                     outputStreamWriter.flush()
                 }
                 else -> {
                     //Log.ASSERT
                     Log.wtf(tag, message)
-                    checkAndSplitLogfile(message.length)
                     outputStreamWriter.write(message)
                     outputStreamWriter.flush()
                 }
@@ -69,7 +65,7 @@ class RollingFileTimberTree(val application: Application) : Timber.Tree(), Engin
     }
 
     private fun checkAndSplitLogfile(length: Int) {
-        if (file.length() + length > maxFileSize) {
+        if (file.length() + length > (maxFileSizeInMBytes * bytesPerMegaByte)) {
             //Close the current file handle
             outputStreamWriter.close()
 
@@ -94,6 +90,9 @@ class RollingFileTimberTree(val application: Application) : Timber.Tree(), Engin
 
     override fun close() {
         outputStreamWriter.close()
+    }
 
+    companion object {
+        const val bytesPerMegaByte = 1_000_000
     }
 }
