@@ -1,5 +1,6 @@
 package com.android.screenrecorder.system.logger.di
 
+import android.app.Application
 import com.android.screenrecorder.system.logger.RollingFileTimberTree
 import dagger.Module
 import dagger.Provides
@@ -12,5 +13,7 @@ import javax.inject.Singleton
 object LoggerModule {
     @Singleton
     @Provides
-    fun providesTimberTree(): RollingFileTimberTree = RollingFileTimberTree()
+    fun providesTimberTree(application: Application): RollingFileTimberTree {
+       return  RollingFileTimberTree(application)
+    }
 }
