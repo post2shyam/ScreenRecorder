@@ -10,12 +10,14 @@ import java.io.OutputStreamWriter
 import java.nio.charset.Charset
 
 class RollingFileTimberTree(val application: Application) : Timber.Tree(), Engine, Closeable {
+
     private var engineStarted: Boolean = false
     private val baseFileName = "logs"
     private var fileCount = 0
     private var file: File
     private var outputStreamWriter: OutputStreamWriter
     private val maxFileSizeInMBytes = 3
+    private lateinit var listener: Listener
 
     init {
         file = File(application.filesDir, fileName())
@@ -64,22 +66,6 @@ class RollingFileTimberTree(val application: Application) : Timber.Tree(), Engin
         }
     }
 
-    private fun checkAndSplitLogfile(length: Int) {
-        if (file.length() + length > (maxFileSizeInMBytes * bytesPerMegaByte)) {
-            //Close the current file handle
-            outputStreamWriter.close()
-
-            //Update file count
-            fileCount++
-
-            //Create new file handle
-            file = File(application.filesDir, fileName())
-            outputStreamWriter = OutputStreamWriter(file.outputStream())
-        }
-    }
-
-    private fun fileName() = "$baseFileName$fileCount"
-
     override fun start() {
         engineStarted = true
     }
@@ -92,7 +78,35 @@ class RollingFileTimberTree(val application: Application) : Timber.Tree(), Engin
         outputStreamWriter.close()
     }
 
+    fun attachListener(listener: Listener) {
+        this.listener = listener
+    }
+
+    fun fileName() = "$baseFileName$fileCount"
+
+    private fun checkAndSplitLogfile(length: Int) {
+        if (file.length() + length > (maxFileSizeInMBytes * bytesPerMegaByte)) {
+            //Close the current file handle
+            outputStreamWriter.close()
+
+            //Update file count
+            fileCount++
+
+            //Create new file handle
+            val fileName = fileName()
+            file = File(application.filesDir, fileName)
+            outputStreamWriter = OutputStreamWriter(file.outputStream())
+
+            //Notify Logfile Rollover has happened
+            listener.newFileRollOver()
+        }
+    }
+
     companion object {
-        const val bytesPerMegaByte = 1_000_000
+        const val bytesPerMegaByte = 10//1_000_000
+    }
+
+    interface Listener {
+        fun newFileRollOver()
     }
 }

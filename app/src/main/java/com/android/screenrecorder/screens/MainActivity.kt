@@ -32,8 +32,22 @@ class MainActivity : AppCompatActivity() {
 
         rollingFileTimberTree.start()
 
+        setupListeners()
         setupUi()
         startDummyLogging()
+    }
+
+    private fun setupListeners() {
+        rollingFileTimberTree.attachListener(object : RollingFileTimberTree.Listener {
+            override fun newFileRollOver() {
+                lifecycle.coroutineScope.launch(Dispatchers.Main) {
+                    with(binding) {
+                        logFileView.text =
+                            getString(R.string.log_file_name, rollingFileTimberTree.fileName())
+                    }
+                }
+            }
+        })
     }
 
     private fun startDummyLogging() {
@@ -61,6 +75,8 @@ class MainActivity : AppCompatActivity() {
                     getString(R.string.play)
                 }
             }
+            //Update recent logfile name
+            logFileView.text = getString(R.string.log_file_name, rollingFileTimberTree.fileName())
         }
     }
 }
